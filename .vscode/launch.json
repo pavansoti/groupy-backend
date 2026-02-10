@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-InstagramApplication<instagram-application>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.instagram.InstagramApplication",
+            "projectName": "instagram-application",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
