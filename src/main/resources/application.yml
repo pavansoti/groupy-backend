@@ -17,6 +17,11 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
+cloudinary:
+  cloud-name: dax0rgeys
+  api-key: 522414747294619
+  api-secret: kLtScFr_ruJELXFkrR34CTd2CTU
+
 # JWT Configuration
 jwt:
   secret: my-super-secure-very-long-512-bit-secret-key-for-instagram-project-2026

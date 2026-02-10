@@ -1,26 +1,31 @@
 package com.instagram.service;
 
-import com.instagram.dto.FeedsResponse;
-import com.instagram.dto.PostResponseDto;
-import com.instagram.dto.UserResponseDto;
-import com.instagram.entity.Post;
-import com.instagram.entity.PostLike;
-import com.instagram.entity.User;
-import com.instagram.repository.PostLikeRepository;
-import com.instagram.repository.PostRepository;
-import com.instagram.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import com.instagram.dto.FeedsResponse;
+import com.instagram.dto.PostResponseDto;
+import com.instagram.entity.Post;
+import com.instagram.entity.PostLike;
+import com.instagram.entity.User;
+import com.instagram.repository.PostLikeRepository;
+import com.instagram.repository.PostRepository;
+import com.instagram.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +35,8 @@ public class PostService {
     private final PostLikeRepository postLikeRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final CloudinaryService cloudinaryService;
+    Cloudinary cloudinary;
 
     // Directory for local file storage
     private final Path fileStorageLocation = Paths.get("uploads").toAbsolutePath().normalize();
@@ -47,14 +54,21 @@ public class PostService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String fileName = storeFile(file);
-        // Assuming the file is served from a static path, e.g., /uploads/
-        String fileUrl = fileName != null ? "/uploads/" + fileName : null;
+        String imageUrl = null;
+        String publicId = null;
+        
+        if (file != null && !file.isEmpty()) {
+        	        	
+        	Map uploadResult = cloudinaryService.uploadImage(file);
+            imageUrl = uploadResult.get("secure_url").toString();
+            publicId = uploadResult.get("public_id").toString();
+        }
 
         Post post = Post.builder()
                 .user(user)
                 .caption(caption)
-                .imageUrl(fileUrl)
+                .imageUrl(imageUrl)
+                .imagePublicId(publicId)
                 .build();
 
         Post savedPost = postRepository.save(post);
@@ -77,8 +91,10 @@ public class PostService {
             throw new RuntimeException("You are not allowed to delete this post");
         }
 
-        // delete image from disk
-        deleteImageFile(post.getImageUrl());
+        // Delete image from Cloudinary first
+        if (post.getImagePublicId() != null) {
+            cloudinaryService.deleteImage(post.getImagePublicId());
+        }
 
         // Delete post
         postRepository.delete(post);
@@ -204,14 +220,25 @@ public class PostService {
     private void deleteImageFile(String imageUrl) {
         if (imageUrl == null || imageUrl.isBlank()) return;
 
+//        try {
+//            Path filePath = Paths.get("uploads")
+//                    .resolve(Paths.get(imageUrl).getFileName().toString());
+//
+//            Files.deleteIfExists(filePath);
+//        } catch (Exception e) {
+//            // log warning, don't fail delete
+//            System.out.println("Failed to delete image file: " + e.getMessage());
+//        }
+        
+        
         try {
-            Path filePath = Paths.get("uploads")
-                    .resolve(Paths.get(imageUrl).getFileName().toString());
+            String publicId = imageUrl
+                .substring(imageUrl.lastIndexOf("/") + 1)
+                .split("\\.")[0];
 
-            Files.deleteIfExists(filePath);
+            cloudinary.uploader().destroy("posts/" + publicId, ObjectUtils.emptyMap());
         } catch (Exception e) {
-            // log warning, don't fail delete
-            System.out.println("Failed to delete image file: " + e.getMessage());
+        	System.out.println("Failed to delete image file: " + e.getMessage());
         }
     }
 
