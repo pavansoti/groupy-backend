@@ -11,9 +11,21 @@ import java.util.List;
 public interface PostRepository extends JpaRepository<Post, Long> {
 
     // Efficiently fetch posts from users that the given user follows
-    @Query("SELECT p FROM Post p JOIN FETCH p.user WHERE p.user IN " +
-            "(SELECT f.following FROM Follow f WHERE f.follower = :user) " +
-            "ORDER BY p.createdAt DESC")
+//    @Query("SELECT p FROM Post p JOIN FETCH p.user WHERE p.user IN " +
+//            "(SELECT f.following FROM Follow f WHERE f.follower = :user) " +
+//            "ORDER BY p.createdAt DESC")
+//    List<Post> findFeedByUser(@Param("user") User user);
+    
+	// get feeds of self and other following users
+	@Query("""
+        SELECT p FROM Post p
+        WHERE p.user = :user
+           OR p.user IN (
+                SELECT f.following FROM Follow f
+                WHERE f.follower = :user
+           )
+        ORDER BY p.createdAt DESC
+    """)
     List<Post> findFeedByUser(@Param("user") User user);
 
    @Query("""

@@ -1,5 +1,6 @@
 package com.instagram.service;
 
+import com.instagram.dto.FeedsResponse;
 import com.instagram.dto.PostResponseDto;
 import com.instagram.dto.UserResponseDto;
 import com.instagram.entity.Post;
@@ -16,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -47,7 +49,7 @@ public class PostService {
 
         String fileName = storeFile(file);
         // Assuming the file is served from a static path, e.g., /uploads/
-        String fileUrl = "/uploads/" + fileName;
+        String fileUrl = fileName != null ? "/uploads/" + fileName : null;
 
         Post post = Post.builder()
                 .user(user)
@@ -83,16 +85,46 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public List<PostResponseDto> getFeed(String username) {
+    public List<FeedsResponse> getFeed(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<Post> posts = postRepository.findFeedByUser(user);
 
         return posts.stream()
-                .filter(post -> post.getImageUrl() != null && post.getImageUrl() != "")
-                .map(post -> mapToDto(post, user))
+                .map(post -> mapToFeedResponse(post, user))
                 .collect(Collectors.toList());
+    }
+    
+    private FeedsResponse mapToFeedResponse(Post post, User currentUser) {
+
+        FeedsResponse response = new FeedsResponse();
+
+        List<PostLike> likes = post.getLikes() != null
+                ? post.getLikes()
+                : Collections.emptyList();
+
+        boolean likedByCurrentUser = likes.stream()
+                .anyMatch(like ->
+                        like.getUser() != null &&
+                        like.getUser().getId().equals(currentUser.getId())
+                );
+
+        response.setId(post.getId());
+        response.setImageUrl(post.getImageUrl());
+        response.setCaption(post.getCaption());
+        response.setLikeCount(likes.size());
+        response.setCommentCount(0); // better than null
+        response.setCreatedAt(post.getCreatedAt().toString());
+
+        User author = post.getUser();
+        response.setAuthorId(author.getId());
+        response.setAuthorUsername(author.getUsername());
+        response.setAuthorProfilePicture(author.getProfilePicUrl());
+
+        response.setLikedByCurrentUser(likedByCurrentUser);
+
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -151,8 +183,8 @@ public class PostService {
     }
 
     private String storeFile(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new RuntimeException("Failed to store empty file.");
+        if (file == null || file.isEmpty()) {
+            return null;
         }
         try {
             String originalFileName = file.getOriginalFilename();

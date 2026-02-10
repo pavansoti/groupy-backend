@@ -1,6 +1,7 @@
 package com.instagram.controller;
 
 import com.instagram.dto.ApiResponse;
+import com.instagram.dto.FeedsResponse;
 import com.instagram.dto.PostResponseDto;
 import com.instagram.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +38,8 @@ public class PostController {
     }
 
     @GetMapping("/feed/following")
-    public ResponseEntity<ApiResponse<List<PostResponseDto>>> getFeed(Principal principal) {
-        List<PostResponseDto> feed = postService.getFeed(principal.getName());
+    public ResponseEntity<ApiResponse<List<FeedsResponse>>> getFeed(Principal principal) {
+        List<FeedsResponse> feed = postService.getFeed(principal.getName());
         return ResponseEntity.ok(ApiResponse.success("Feed retrieved successfully", feed));
     }
 
