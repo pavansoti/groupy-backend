@@ -48,6 +48,12 @@ public class PostController {
         List<PostResponseDto> feed = postService.getPostsByUser(userId, principal.getName());
         return ResponseEntity.ok(ApiResponse.success("Feed retrieved successfully", feed));
     }
+    
+    @GetMapping("/feeds/liked")
+    public ResponseEntity<ApiResponse<List<PostResponseDto>>> getLikedFeedsByUsername(Principal principal) {
+        List<PostResponseDto> feed = postService.getLikedPostsByUser(principal.getName());
+        return ResponseEntity.ok(ApiResponse.success("Feed retrieved successfully", feed));
+    }
 
 
     @PostMapping("/{postId}/like")
