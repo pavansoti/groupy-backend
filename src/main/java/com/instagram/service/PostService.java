@@ -36,7 +36,6 @@ public class PostService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final CloudinaryService cloudinaryService;
-    Cloudinary cloudinary;
 
     // Directory for local file storage
 //    private final Path fileStorageLocation = Paths.get("uploads").toAbsolutePath().normalize();
@@ -229,31 +228,6 @@ public class PostService {
 //            throw new RuntimeException("Failed to store file " + file.getOriginalFilename(), e);
 //        }
 //    }
-
-    private void deleteImageFile(String imageUrl) {
-        if (imageUrl == null || imageUrl.isBlank()) return;
-
-//        try {
-//            Path filePath = Paths.get("uploads")
-//                    .resolve(Paths.get(imageUrl).getFileName().toString());
-//
-//            Files.deleteIfExists(filePath);
-//        } catch (Exception e) {
-//            // log warning, don't fail delete
-//            System.out.println("Failed to delete image file: " + e.getMessage());
-//        }
-        
-        
-        try {
-            String publicId = imageUrl
-                .substring(imageUrl.lastIndexOf("/") + 1)
-                .split("\\.")[0];
-
-            cloudinary.uploader().destroy("posts/" + publicId, ObjectUtils.emptyMap());
-        } catch (Exception e) {
-        	System.out.println("Failed to delete image file: " + e.getMessage());
-        }
-    }
 
     private PostResponseDto mapToDto(Post post, User user) {
         // UserResponseDto userDto = new UserResponseDto();

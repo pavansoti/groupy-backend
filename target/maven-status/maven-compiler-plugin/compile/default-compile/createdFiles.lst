@@ -1,1 +1,3 @@
 com\instagram\dto\UserDto.class
+com\instagram\dto\ChangePasswordRequest.class
+com\instagram\enums\Gender.class
