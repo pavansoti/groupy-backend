@@ -1,6 +1,7 @@
 package com.instagram.controller;
 
 import com.instagram.dto.ApiResponse;
+import com.instagram.dto.ChangePasswordRequest;
 import com.instagram.dto.JwtResponse;
 import com.instagram.dto.LoginRequest;
 import com.instagram.dto.SignupRequest;
@@ -11,6 +12,9 @@ import com.instagram.service.UserService;
 import com.instagram.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.security.Principal;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -104,4 +108,30 @@ public class AuthController {
                     .body(ApiResponse.error("Invalid email or password"));
         }
     }
+    
+//    @PostMapping("/change-password")
+//    public ResponseEntity<ApiResponse<Void>> changePassword(
+//    		Principal principal,
+//            @Valid @RequestBody ChangePasswordRequest request
+//    ) {
+//
+//	    User user = userRepository.findByUsername(principal.getName())
+//	            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+//	    
+//	 // Authenticate user
+//        authenticationManager.authenticate(
+//                new UsernamePasswordAuthenticationToken(
+//                		principal.getName(),
+//                		request.getCurrentPassword()
+//                )
+//        );
+//
+////	    if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+////	        throw new BadCredentialsException("Current password is incorrect");
+////	    }
+//
+//	    user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+//	    userRepository.save(user);
+//        return ResponseEntity.ok(ApiResponse.success("Password changed successfully"));
+//    }
 }

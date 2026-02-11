@@ -37,6 +37,18 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         ORDER BY p.createdAt DESC
     """)
     List<Post> findPostsWithImageOnlyByUser(@Param("userId") Long userId);
+   
+   @Query("""
+	    SELECT DISTINCT p
+	    FROM Post p
+	    JOIN p.likes l
+	    WHERE l.user.id = :userId
+	      AND p.user.id <> :userId
+	      AND p.imageUrl IS NOT NULL
+	      AND p.imageUrl <> ''
+	    ORDER BY p.createdAt DESC
+	""")
+	List<Post> findLikedPostsWithImageOnlyByOtherUsers(@Param("userId") Long userId);
 
     List<Post> findByUserIdOrderByCreatedAtDesc(Long userId);
 }

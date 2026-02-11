@@ -51,7 +51,9 @@ public class User {
     private String email;
 
     @Column(name = "profile_pic_url")
-    private String profilePicUrl;
+    private String imageUrl;
+    
+    private String imagePublicId;
 
     @Column(name = "is_private")
     private Boolean isPrivate;

@@ -39,15 +39,15 @@ public class PostService {
     Cloudinary cloudinary;
 
     // Directory for local file storage
-    private final Path fileStorageLocation = Paths.get("uploads").toAbsolutePath().normalize();
-
-    {
-        try {
-            Files.createDirectories(fileStorageLocation);
-        } catch (Exception ex) {
-            throw new RuntimeException("Could not create the directory where the uploaded files will be stored.", ex);
-        }
-    }
+//    private final Path fileStorageLocation = Paths.get("uploads").toAbsolutePath().normalize();
+//
+//    {
+//        try {
+//            Files.createDirectories(fileStorageLocation);
+//        } catch (Exception ex) {
+//            throw new RuntimeException("Could not create the directory where the uploaded files will be stored.", ex);
+//        }
+//    }
 
     @Transactional
     public PostResponseDto createPost(String username, String caption, MultipartFile file) {
@@ -136,7 +136,7 @@ public class PostService {
         User author = post.getUser();
         response.setAuthorId(author.getId());
         response.setAuthorUsername(author.getUsername());
-        response.setAuthorProfilePicture(author.getProfilePicUrl());
+        response.setAuthorProfilePicture(author.getImageUrl());
 
         response.setLikedByCurrentUser(likedByCurrentUser);
 
@@ -153,6 +153,19 @@ public class PostService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<Post> posts = postRepository.findPostsWithImageOnlyByUser(user.getId());
+        // System.out.println("posts: " + posts);
+        return posts.stream()
+            .map(post -> mapToDto(post, currentUser))
+            .collect(Collectors.toList());
+    }
+    
+    @Transactional(readOnly = true)
+    public List<PostResponseDto> getLikedPostsByUser(String currentUsername) {
+
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Post> posts = postRepository.findLikedPostsWithImageOnlyByOtherUsers(currentUser.getId());
         // System.out.println("posts: " + posts);
         return posts.stream()
             .map(post -> mapToDto(post, currentUser))
@@ -198,24 +211,24 @@ public class PostService {
         postLikeRepository.deleteByUserAndPost(user, post);
     }
 
-    private String storeFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            return null;
-        }
-        try {
-            String originalFileName = file.getOriginalFilename();
-            String fileExtension = "";
-            if (originalFileName != null && originalFileName.contains(".")) {
-                fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
-            }
-            String fileName = UUID.randomUUID().toString() + fileExtension;
-            Path targetLocation = fileStorageLocation.resolve(fileName);
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-            return fileName;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to store file " + file.getOriginalFilename(), e);
-        }
-    }
+//    private String storeFile(MultipartFile file) {
+//        if (file == null || file.isEmpty()) {
+//            return null;
+//        }
+//        try {
+//            String originalFileName = file.getOriginalFilename();
+//            String fileExtension = "";
+//            if (originalFileName != null && originalFileName.contains(".")) {
+//                fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
+//            }
+//            String fileName = UUID.randomUUID().toString() + fileExtension;
+//            Path targetLocation = fileStorageLocation.resolve(fileName);
+//            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+//            return fileName;
+//        } catch (Exception e) {
+//            throw new RuntimeException("Failed to store file " + file.getOriginalFilename(), e);
+//        }
+//    }
 
     private void deleteImageFile(String imageUrl) {
         if (imageUrl == null || imageUrl.isBlank()) return;

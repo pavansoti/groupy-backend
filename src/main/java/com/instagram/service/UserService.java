@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -36,19 +37,20 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CloudinaryService cloudinaryService;
 
-    private final Path fileStorageLocation =
-            Paths.get("uploads").toAbsolutePath().normalize();
+//    private final Path fileStorageLocation =
+//            Paths.get("uploads").toAbsolutePath().normalize();
 
     // Ensure uploads folder exists
-    @PostConstruct
-    public void init() {
-        try {
-            Files.createDirectories(fileStorageLocation);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not create upload directory", e);
-        }
-    }
+//    @PostConstruct
+//    public void init() {
+//        try {
+//            Files.createDirectories(fileStorageLocation);
+//        } catch (IOException e) {
+//            throw new RuntimeException("Could not create upload directory", e);
+//        }
+//    }
 
     public User createUser(User user) {
         log.info("Creating user with username: {}", user.getUsername());
@@ -73,7 +75,7 @@ public class UserService {
         responseDto.setEmail(user.getEmail());
         responseDto.setBio(user.getBio());
         responseDto.setCreatedAt(user.getCreatedAt().toString());
-        responseDto.setProfilePicUrl(user.getProfilePicUrl());
+        responseDto.setProfilePicUrl(user.getImageUrl());
 
         responseDto.setPostCount(user.getPosts() != null ? user.getPosts().stream().filter(post -> post.getImageUrl() != null).toList().size() : 0);
         responseDto.setFollowerCount(user.getFollowers() != null ? user.getFollowers().size() : 0);
@@ -134,9 +136,7 @@ public class UserService {
         User user = getUserById(id);
 
         // delete profile pic if exists
-        if (user.getProfilePicUrl() != null) {
-            deleteFile(user.getProfilePicUrl());
-        }
+        deleteFile(user.getImagePublicId());
 
         userRepository.delete(user);
         log.info("Deleted user with id: {}", id);
@@ -174,7 +174,7 @@ public class UserService {
                 user.getUsername(),
                 user.getEmail(),
                 user.getBio(),
-                user.getProfilePicUrl(),
+                user.getImageUrl(),
                 user.getFollowers() != null ? user.getFollowers().size() : 0,
                 isFollowing
         );
@@ -188,17 +188,24 @@ public class UserService {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Profile image is required");
         }
+        
+        String imageUrl = null;
+        String publicId = null;
+        
+        if (file != null && !file.isEmpty()) {
+        	        	
+        	Map uploadResult = cloudinaryService.uploadImage(file);
+            imageUrl = uploadResult.get("secure_url").toString();
+            publicId = uploadResult.get("public_id").toString();
+        }
 
         User user = getUserById(id);
 
         // delete old pic if exists
-        if (user.getProfilePicUrl() != null) {
-            deleteFile(user.getProfilePicUrl());
-        }
+        deleteFile(user.getImagePublicId());
 
-        String fileName = storeFile(file);
-        user.setProfilePicUrl("/uploads/" + fileName);
-
+        user.setImageUrl(imageUrl);
+        user.setImagePublicId(publicId);
         user.setFollowers(null);
         user.setFollowing(null);
         user.setPosts(null);
@@ -208,48 +215,50 @@ public class UserService {
 
     // ================= FILE STORAGE =================
 
-    private String storeFile(MultipartFile file) {
+//    private String storeFile(MultipartFile file) {
+//
+//        try {
+//            String originalFileName = file.getOriginalFilename();
+//            String extension = "";
+//
+//            if (originalFileName != null && originalFileName.contains(".")) {
+//                extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+//            }
+//
+//            String fileName = UUID.randomUUID() + extension;
+//
+//            Path targetLocation = fileStorageLocation.resolve(fileName).normalize();
+//
+//            Files.copy(file.getInputStream(), targetLocation,
+//                    StandardCopyOption.REPLACE_EXISTING);
+//
+//            return fileName;
+//
+//        } catch (IOException e) {
+//            throw new RuntimeException("Failed to store file", e);
+//        }
+//    }
 
-        try {
-            String originalFileName = file.getOriginalFilename();
-            String extension = "";
+    private void deleteFile(String imagePublicId) {
 
-            if (originalFileName != null && originalFileName.contains(".")) {
-                extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-            }
-
-            String fileName = UUID.randomUUID() + extension;
-
-            Path targetLocation = fileStorageLocation.resolve(fileName).normalize();
-
-            Files.copy(file.getInputStream(), targetLocation,
-                    StandardCopyOption.REPLACE_EXISTING);
-
-            return fileName;
-
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to store file", e);
-        }
-    }
-
-    private void deleteFile(String fileUrl) {
-
-        if (fileUrl == null || fileUrl.isBlank()) {
+        if (imagePublicId == null || imagePublicId.isBlank()) {
             return;
         }
+        
+        cloudinaryService.deleteImage(imagePublicId);
 
-        try {
-            String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
-
-            Path filePath = fileStorageLocation
-                    .resolve(fileName)
-                    .normalize();
-
-            Files.deleteIfExists(filePath);
-
-        } catch (IOException e) {
-            log.warn("Failed to delete file: {}", fileUrl);
-        }
+//        try {
+//            String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
+//
+//            Path filePath = fileStorageLocation
+//                    .resolve(fileName)
+//                    .normalize();
+//
+//            Files.deleteIfExists(filePath);
+//
+//        } catch (IOException e) {
+//            log.warn("Failed to delete file: {}", fileUrl);
+//        }
     }
 
     private User getAuthenticatedUser() {
