@@ -42,7 +42,7 @@ public class Post {
     private User user;
 
 
-    @Column(length = 2200) // Instagram caption limit is 2200 characters
+    @Column(length = 2200) // caption limit is 2200 characters
     private String caption;
 
     @Column(name = "image_url")
