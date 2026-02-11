@@ -8,4 +8,4 @@ RUN ./mvnw clean package -DskipTests
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "target/instagram-application-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "target/groupy-application-0.0.1-SNAPSHOT.jar"]
