@@ -1,6 +1,5 @@
 com\groupy\entity\Follow$FollowBuilder.class
 com\groupy\util\JwtUtil.class
-com\groupy\InstagramApplication.class
 com\groupy\security\CustomUserDetailsService.class
 com\groupy\entity\Follow.class
 com\groupy\service\UserService.class
@@ -23,6 +22,7 @@ com\groupy\controller\PostController.class
 com\groupy\repository\PostLikeRepository.class
 com\groupy\entity\User.class
 com\groupy\dto\FollowCountDto.class
+com\groupy\GroupyApplication.class
 com\groupy\dto\UserRequestDto.class
 com\groupy\entity\Post.class
 com\groupy\exception\GlobalExceptionHandler.class
