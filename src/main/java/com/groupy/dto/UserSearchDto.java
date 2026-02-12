@@ -12,7 +12,7 @@ public class UserSearchDto {
     private String username;
     private String email;
     private String bio;
-    private String profilePicUrl;
+    private String imageUrl;
     private long followerCount;
     private boolean isFollowing;
 }

@@ -3,5 +3,6 @@ package com.groupy.enums;
 public enum Gender {
     MALE,
     FEMALE,
-    OTHER
+    OTHER,
+    PREFER_NOT_TO_SAY
 }

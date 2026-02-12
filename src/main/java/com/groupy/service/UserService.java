@@ -75,7 +75,7 @@ public class UserService {
         responseDto.setEmail(user.getEmail());
         responseDto.setBio(user.getBio());
         responseDto.setCreatedAt(user.getCreatedAt().toString());
-        responseDto.setProfilePicUrl(user.getImageUrl());
+        responseDto.setImageUrl(user.getImageUrl());
 
         responseDto.setPostCount(user.getPosts() != null ? user.getPosts().stream().filter(post -> post.getImageUrl() != null).toList().size() : 0);
         responseDto.setFollowerCount(user.getFollowers() != null ? user.getFollowers().size() : 0);
@@ -115,11 +115,44 @@ public class UserService {
 
     public User updateUser(Long id, UserRequestDto userDetails) {
         User user = getUserById(id);
+        
+     // Check username availability (only if changed)
+        if (!user.getUsername().equals(userDetails.getUsername())) {
+            if (userRepository.existsByUsername(userDetails.getUsername())) {
+                throw new RuntimeException("Username already taken");
+            }
+            user.setUsername(userDetails.getUsername());
+        }
 
-        user.setUsername(userDetails.getUsername());
-        user.setEmail(userDetails.getEmail());
+        // Check email availability (only if changed)
+        if (!user.getEmail().equals(userDetails.getEmail())) {
+            if (userRepository.existsByEmail(userDetails.getEmail())) {
+                throw new RuntimeException("Email already in use");
+            }
+            user.setEmail(userDetails.getEmail());
+        }
+
+        // Update optional fields
         user.setBio(userDetails.getBio());
-        // user.setGender(userDetails.getGender());
+        user.setGender(userDetails.getGender());
+        user.setPrivateAccount(userDetails.getPrivateAccount());
+        
+
+        log.info("Updating user with id: {}", id);
+
+        User updatedUser = userRepository.save(user);
+
+        updatedUser.setFollowers(null);
+        updatedUser.setFollowing(null);
+        updatedUser.setPosts(null);
+
+        return updatedUser;
+    }
+    
+    public User updateUserBio(Long id, UserRequestDto userDetails) {
+        User user = getUserById(id);
+
+        user.setBio(userDetails.getBio());
 
         log.info("Updating user with id: {}", id);
 

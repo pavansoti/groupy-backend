@@ -20,4 +20,6 @@ public class UserRequestDto {
     private Gender gender;
     
     private String bio;
+
+    private Boolean privateAccount;
 }
