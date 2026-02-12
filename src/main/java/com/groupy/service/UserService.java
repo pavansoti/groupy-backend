@@ -76,6 +76,8 @@ public class UserService {
         responseDto.setBio(user.getBio());
         responseDto.setCreatedAt(user.getCreatedAt().toString());
         responseDto.setImageUrl(user.getImageUrl());
+        responseDto.setGender(user.getGender());
+        responseDto.setPrivateAccount(user.getPrivateAccount());
 
         responseDto.setPostCount(user.getPosts() != null ? user.getPosts().stream().filter(post -> post.getImageUrl() != null).toList().size() : 0);
         responseDto.setFollowerCount(user.getFollowers() != null ? user.getFollowers().size() : 0);
