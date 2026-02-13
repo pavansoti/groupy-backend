@@ -3,6 +3,7 @@ package com.groupy.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import java.io.IOException;
 import java.security.Principal;
 
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import com.groupy.dto.ApiResponse;
 import com.groupy.dto.ChangePasswordRequest;
 import com.groupy.dto.JwtResponse;
 import com.groupy.dto.LoginRequest;
+import com.groupy.dto.ResetPasswordRequest;
 import com.groupy.dto.SignupRequest;
 import com.groupy.entity.User;
 import com.groupy.exception.ResourceNotFoundException;
@@ -119,6 +121,33 @@ public class AuthController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("Password changed successfully", null)
+        );
+    }
+    
+    @GetMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<String>> forgotPassword(
+            @RequestParam String email) {
+
+        try {
+			userService.forgotPassword(email);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Reset link sent to your email", null)
+        );
+    }
+    
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<String>> resetPassword(
+            @RequestBody ResetPasswordRequest request) {
+
+        userService.resetPassword(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Password reset successfully", null)
         );
     }
 }

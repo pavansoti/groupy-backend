@@ -19,6 +19,6 @@ public class UserResponseDto {
    private long followerCount;
    private long followingCount;
    private Boolean privateAccount;;
-   private Boolean isFollowing;
+   private boolean isFollowing;
 //    private boolean isCurrentUser;
 }

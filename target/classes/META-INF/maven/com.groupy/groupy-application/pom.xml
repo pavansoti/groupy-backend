@@ -43,6 +43,13 @@
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
 
+		<!-- Mail -->
+		<dependency>
+		    <groupId>com.sendgrid</groupId>
+		    <artifactId>sendgrid-java</artifactId>
+		    <version>4.10.2</version>
+		</dependency>
+
         <!-- JPA -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
