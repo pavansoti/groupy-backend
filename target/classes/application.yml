@@ -3,9 +3,9 @@ spring:
     name: groupy-application
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://localhost:3306/instagram_db
+    username: root
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 5
@@ -44,4 +44,4 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
 server:
-  port: ${PORT:8080}
+  port: 8080

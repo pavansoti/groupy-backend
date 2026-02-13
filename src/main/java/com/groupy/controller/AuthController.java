@@ -110,29 +110,15 @@ public class AuthController {
         }
     }
     
-//    @PostMapping("/change-password")
-//    public ResponseEntity<ApiResponse<Void>> changePassword(
-//    		Principal principal,
-//            @Valid @RequestBody ChangePasswordRequest request
-//    ) {
-//
-//	    User user = userRepository.findByUsername(principal.getName())
-//	            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-//	    
-//	 // Authenticate user
-//        authenticationManager.authenticate(
-//                new UsernamePasswordAuthenticationToken(
-//                		principal.getName(),
-//                		request.getCurrentPassword()
-//                )
-//        );
-//
-////	    if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-////	        throw new BadCredentialsException("Current password is incorrect");
-////	    }
-//
-//	    user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-//	    userRepository.save(user);
-//        return ResponseEntity.ok(ApiResponse.success("Password changed successfully"));
-//    }
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<String>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            Principal principal) {
+
+        userService.changePassword(principal.getName(), request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Password changed successfully", null)
+        );
+    }
 }

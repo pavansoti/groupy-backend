@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -64,6 +65,14 @@ public class UserController {
             @PathVariable Long id,
             @Valid @RequestBody UserRequestDto userDetails) {
         User updatedUser = userService.updateUser(id, userDetails);
+        return ResponseEntity.ok(ApiResponse.success("User updated successfully", updatedUser));
+    }
+    
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<User>> updateUserBio(
+            @PathVariable Long id,
+            @RequestBody UserRequestDto userDetails) {
+        User updatedUser = userService.updateUserBio(id, userDetails);
         return ResponseEntity.ok(ApiResponse.success("User updated successfully", updatedUser));
     }
     

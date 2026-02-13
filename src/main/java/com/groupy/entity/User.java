@@ -56,7 +56,7 @@ public class User {
     private String imagePublicId;
 
     @Column(name = "is_private")
-    private Boolean isPrivate;
+    private Boolean privateAccount;
     
     @Column(nullable = false)
     @Size(min = 6, message = "Password must be at least 6 characters")
@@ -65,9 +65,9 @@ public class User {
     @Column(length = 500)
     private String bio;
 
-    // @Enumerated(EnumType.STRING)
-    // @Column(nullable = true)
-    // private Gender gender;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
+    private Gender gender;
 
     @Column(nullable = false)
     @Builder.Default

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.groupy.dto.ChangePasswordRequest;
 import com.groupy.dto.UserDto;
 import com.groupy.dto.UserRequestDto;
 import com.groupy.dto.UserResponseDto;
@@ -62,6 +63,31 @@ public class UserService {
         return userRepository.findByIdWithPosts(id)
             .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
     }
+    
+    public void changePassword(String username, ChangePasswordRequest request) {
+
+        // Find user
+        User user = getUserByUsername(username);
+
+        // Check current password
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+
+        // Check new password match
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            throw new IllegalArgumentException("New passwords do not match");
+        }
+
+        // Prevent reusing old password
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("New password cannot be same as current password");
+        }
+
+        // 5Encode and save
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
 
     public UserResponseDto getUserResponseById(Long id) {
 
@@ -75,7 +101,9 @@ public class UserService {
         responseDto.setEmail(user.getEmail());
         responseDto.setBio(user.getBio());
         responseDto.setCreatedAt(user.getCreatedAt().toString());
-        responseDto.setProfilePicUrl(user.getImageUrl());
+        responseDto.setImageUrl(user.getImageUrl());
+        responseDto.setGender(user.getGender());
+        responseDto.setPrivateAccount(user.getPrivateAccount());
 
         responseDto.setPostCount(user.getPosts() != null ? user.getPosts().stream().filter(post -> post.getImageUrl() != null).toList().size() : 0);
         responseDto.setFollowerCount(user.getFollowers() != null ? user.getFollowers().size() : 0);
@@ -115,11 +143,44 @@ public class UserService {
 
     public User updateUser(Long id, UserRequestDto userDetails) {
         User user = getUserById(id);
+        
+     // Check username availability (only if changed)
+        if (!user.getUsername().equals(userDetails.getUsername())) {
+            if (existsByUsername(userDetails.getUsername())) {
+                throw new RuntimeException("Username already taken");
+            }
+            user.setUsername(userDetails.getUsername());
+        }
 
-        user.setUsername(userDetails.getUsername());
-        user.setEmail(userDetails.getEmail());
+        // Check email availability (only if changed)
+        if (!user.getEmail().equals(userDetails.getEmail())) {
+            if (existsByEmail(userDetails.getEmail())) {
+                throw new RuntimeException("Email already in use");
+            }
+            user.setEmail(userDetails.getEmail());
+        }
+
+        // Update optional fields
         user.setBio(userDetails.getBio());
-        // user.setGender(userDetails.getGender());
+        user.setGender(userDetails.getGender());
+        user.setPrivateAccount(userDetails.getPrivateAccount());
+        
+
+        log.info("Updating user with id: {}", id);
+
+        User updatedUser = userRepository.save(user);
+
+        updatedUser.setFollowers(null);
+        updatedUser.setFollowing(null);
+        updatedUser.setPosts(null);
+
+        return updatedUser;
+    }
+    
+    public User updateUserBio(Long id, UserRequestDto userDetails) {
+        User user = getUserById(id);
+
+        user.setBio(userDetails.getBio());
 
         log.info("Updating user with id: {}", id);
 
