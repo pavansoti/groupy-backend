@@ -94,16 +94,16 @@ public class UserService {
     
     public void forgotPassword(String email) throws IOException {
 
-//        User user = userRepository.findByEmail(email)
-//                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // Generate secure random token
         String token = UUID.randomUUID().toString();
 
-//        user.setResetToken(token);
-//        user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
-//
-//        userRepository.save(user);
+        user.setResetToken(token);
+        user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
+
+        userRepository.save(user);
 
         emailService.sendResetEmail(email, token);
     }
