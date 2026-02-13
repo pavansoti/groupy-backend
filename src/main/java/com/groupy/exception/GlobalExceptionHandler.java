@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleGenericException(Exception ex) {
         log.error("Unexpected error occurred: ", ex);
-        ApiResponse<Object> response = ApiResponse.error("An unexpected error occurred");
+        ApiResponse<Object> response = ApiResponse.error(ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
