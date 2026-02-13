@@ -28,6 +28,13 @@ spring:
         order_inserts: true
         order_updates: true
 
+app:
+   frontend-url: ${FRONTEND_URL}
+
+sendgrid:
+  api-key: ${SENDGRID_API_KEY}
+  from-email: ${SENDGRID_FROM_EMAIL}
+
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}
   api-key: ${CLOUDINARY_API_KEY}

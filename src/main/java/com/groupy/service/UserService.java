@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.groupy.dto.ChangePasswordRequest;
+import com.groupy.dto.ResetPasswordRequest;
 import com.groupy.dto.UserDto;
 import com.groupy.dto.UserRequestDto;
 import com.groupy.dto.UserResponseDto;
@@ -39,6 +41,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final CloudinaryService cloudinaryService;
+    private final EmailService emailService;
 
 //    private final Path fileStorageLocation =
 //            Paths.get("uploads").toAbsolutePath().normalize();
@@ -88,6 +91,47 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
+    
+    public void forgotPassword(String email) throws IOException {
+
+//        User user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Generate secure random token
+        String token = UUID.randomUUID().toString();
+
+//        user.setResetToken(token);
+//        user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
+//
+//        userRepository.save(user);
+
+        emailService.sendResetEmail(email, token);
+    }
+    
+    public void resetPassword(ResetPasswordRequest request) {
+
+        User user = userRepository.findByResetToken(request.getToken())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
+
+        // Check expiry
+        if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Token expired");
+        }
+
+        // Check password match
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException("Passwords do not match");
+        }
+
+        // Encode and save
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+
+        // Clear token
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+
+        userRepository.save(user);
+    }    
 
     public UserResponseDto getUserResponseById(Long id) {
 

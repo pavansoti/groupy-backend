@@ -72,6 +72,12 @@ public class User {
     @Column(nullable = false)
     @Builder.Default
     private String role = "USER";
+    
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private LocalDateTime resetTokenExpiry;
 
     @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
