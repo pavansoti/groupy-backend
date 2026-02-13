@@ -38,6 +38,8 @@ C:\Users\pavan\My Folder\GITHUB\groupy-backend\src\main\java\com\groupy\service\
 C:\Users\pavan\My Folder\GITHUB\groupy-backend\src\main\java\com\groupy\entity\Follow.java
 C:\Users\pavan\My Folder\GITHUB\groupy-backend\src\main\java\com\groupy\repository\FollowRepository.java
 C:\Users\pavan\My Folder\GITHUB\groupy-backend\src\main\java\com\groupy\dto\LoginRequest.java
+C:\Users\pavan\My Folder\GITHUB\groupy-backend\src\main\java\com\groupy\dto\ResetPasswordRequest.java
 C:\Users\pavan\My Folder\GITHUB\groupy-backend\src\main\java\com\groupy\entity\PostLike.java
 C:\Users\pavan\My Folder\GITHUB\groupy-backend\src\main\java\com\groupy\GroupyApplication.java
 C:\Users\pavan\My Folder\GITHUB\groupy-backend\src\main\java\com\groupy\config\CloudinaryConfig.java
+C:\Users\pavan\My Folder\GITHUB\groupy-backend\src\main\java\com\groupy\service\EmailService.java

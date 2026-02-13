@@ -10,6 +10,7 @@ com\groupy\entity\Post$PostBuilder.class
 com\groupy\exception\ResourceNotFoundException.class
 com\groupy\dto\NotificationDto$NotificationDtoBuilder.class
 com\groupy\service\PostService.class
+com\groupy\service\EmailService.class
 com\groupy\dto\LoginRequest.class
 com\groupy\dto\ApiResponse.class
 com\groupy\dto\ChangePasswordRequest.class
@@ -22,6 +23,7 @@ com\groupy\controller\PostController.class
 com\groupy\repository\PostLikeRepository.class
 com\groupy\entity\User.class
 com\groupy\dto\FollowCountDto.class
+com\groupy\dto\ResetPasswordRequest.class
 com\groupy\GroupyApplication.class
 com\groupy\dto\UserRequestDto.class
 com\groupy\entity\Post.class
