@@ -35,6 +35,7 @@ public class EmailService {
         try {
 
             log.info("Starting password reset email process for: {}", toEmail);
+            log.info("Email sending from: {}", fromEmail);
 
             String htmlContent =
                     "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;'>"
@@ -81,6 +82,7 @@ public class EmailService {
 
         } catch (Exception e) {
             log.error("Email sending failed for: {}", toEmail, e);
+            log.error("Email sending failed from: {}", fromEmail);
             throw new RuntimeException("Email sending failed: " + e.getMessage(), e);
         }
     }
