@@ -3,19 +3,20 @@ package com.groupy.service;
 import java.time.Year;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import lombok.extern.slf4j.Slf4j;
-import jakarta.mail.internet.MimeMessage;
+
+import com.sendgrid.*;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Content;
+import com.sendgrid.helpers.mail.objects.Email;
+
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailService {
-
-    private final JavaMailSender mailSender;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
@@ -23,27 +24,19 @@ public class EmailService {
     @Value("${app.mail.from}")
     private String fromEmail;
 
+    @Value("${app.mail.sendgrid-api-key}")
+    private String sendGridApiKey;
+
     public void sendResetEmail(String toEmail, String token) {
 
         String resetLink = frontendUrl + "/auth/reset-password?token=" + token;
-
-        MimeMessage message = mailSender.createMimeMessage();
+        String currentYear = String.valueOf(Year.now().getValue());
 
         try {
 
             log.info("Starting password reset email process for: {}", toEmail);
-            log.info("Email From: {}", fromEmail);
-            log.info("Reset link generated: {}", resetLink);
 
-            String currentYear = String.valueOf(Year.now().getValue());
-
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, true);
-
-            helper.setFrom(fromEmail);
-            helper.setTo(toEmail);
-            helper.setSubject("Password Reset");
-            helper.setText(
+            String htmlContent =
                     "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;'>"
                             + "<h2 style='color: #333;'>Password Reset Request</h2>"
                             + "<p>Hello,</p>"
@@ -58,28 +51,37 @@ public class EmailService {
                             + "</div>"
 
                             + "<p>This link expires in <strong>15 minutes</strong>.</p>"
-
                             + "<hr style='margin: 30px 0;'>"
-
                             + "<p style='font-size: 12px; color: gray;'>"
                             + "© " + currentYear + " Groupy. All rights reserved."
                             + "</p>"
-                            + "</div>",
-                    true
-            );
+                            + "</div>";
 
-            mailSender.send(message);
+            Email from = new Email(fromEmail);
+            Email to = new Email(toEmail);
+            Content content = new Content("text/html", htmlContent);
+            Mail mail = new Mail(from, "Password Reset", to, content);
+
+            SendGrid sg = new SendGrid(sendGridApiKey);
+            Request request = new Request();
+
+            request.setMethod(Method.POST);
+            request.setEndpoint("mail/send");
+            request.setBody(mail.build());
+
+            Response response = sg.api(request);
+
+            log.info("SendGrid response status: {}", response.getStatusCode());
+
+            if (response.getStatusCode() >= 400) {
+                throw new RuntimeException("SendGrid error: " + response.getBody());
+            }
 
             log.info("Password reset email successfully sent to: {}", toEmail);
 
         } catch (Exception e) {
-
-            log.error("Email sending failed for: {}", toEmail);
-            log.error("Exception message: {}", e.getMessage());
-            log.error("Stack trace: ", e);
-
+            log.error("Email sending failed for: {}", toEmail, e);
             throw new RuntimeException("Email sending failed: " + e.getMessage(), e);
         }
     }
 }
-
