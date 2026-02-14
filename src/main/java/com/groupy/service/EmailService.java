@@ -21,7 +21,7 @@ public class EmailService {
 
     public void sendResetEmail(String toEmail, String token) {
 
-        String resetLink = frontendUrl + "/reset-password?token=" + token;
+        String resetLink = frontendUrl + "/auth/reset-password?token=" + token;
 
         MimeMessage message = mailSender.createMimeMessage();
 
