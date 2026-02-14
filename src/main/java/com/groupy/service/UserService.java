@@ -181,8 +181,11 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserSearchDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .limit(100)
+                .map(this::convertToUserSearchDto)
+                .collect(Collectors.toList());
     }
 
     public User updateUser(Long id, UserRequestDto userDetails) {

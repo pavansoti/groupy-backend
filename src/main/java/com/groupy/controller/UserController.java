@@ -55,8 +55,8 @@ public class UserController {
     }
     
     @GetMapping
-    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
+    public ResponseEntity<ApiResponse<List<UserSearchDto>>> getAllUsers() {
+        List<UserSearchDto> users = userService.getAllUsers();
         return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", users));
     }
     
