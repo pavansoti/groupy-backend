@@ -25,22 +25,23 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
-  mail:
-    host: smtp.sendgrid.net
-    port: 587
-    username: apikey
-    password: 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
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+#  mail:
+#    host: smtp.sendgrid.net
+#    port: 587
+#    username: apikey
+#    password: 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
+#    properties:
+#      mail:
+#        smtp:
+#          auth: true
+#          starttls:
+#            enable: true
 
 app:
  frontend-url: http://localhost:3000
  mail:
   from: pavansoti@gmail.com
+  sendgrid-api-key: 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
 
 cloudinary:
   cloud-name: dax0rgeys
