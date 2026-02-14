@@ -6,9 +6,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-
+import lombok.extern.slf4j.Slf4j;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailService {
@@ -28,9 +30,13 @@ public class EmailService {
         MimeMessage message = mailSender.createMimeMessage();
 
         try {
-        	
-        	String currentYear = String.valueOf(Year.now().getValue());
-        	
+
+            log.info("Starting password reset email process for: {}", toEmail);
+            log.info("Email From: {}", fromEmail);
+            log.info("Reset link generated: {}", resetLink);
+
+            String currentYear = String.valueOf(Year.now().getValue());
+
             MimeMessageHelper helper =
                     new MimeMessageHelper(message, true);
 
@@ -64,8 +70,15 @@ public class EmailService {
 
             mailSender.send(message);
 
+            log.info("Password reset email successfully sent to: {}", toEmail);
+
         } catch (Exception e) {
-            throw new RuntimeException("Email sending failed" + e.getMessage());
+
+            log.error("Email sending failed for: {}", toEmail);
+            log.error("Exception message: {}", e.getMessage());
+            log.error("Stack trace: ", e);
+
+            throw new RuntimeException("Email sending failed: " + e.getMessage(), e);
         }
     }
 }
