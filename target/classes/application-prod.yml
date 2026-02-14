@@ -29,19 +29,21 @@ spring:
         order_updates: true
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${SEND_EMAIL_FROM}
-    password: ${SEND_EMAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+   host: smtp.sendgrid.net
+   port: 587
+   username: apikey
+   password: ${SEND_EMAIL_PASSWORD}
+   properties:
+    mail:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
 
 app:
    frontend-url: ${FRONTEND_URL}
+   mail:
+    from: ${SEND_EMAIL_PASSWORD}
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}
