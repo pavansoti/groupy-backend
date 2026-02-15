@@ -7,12 +7,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.groupy.dto.ApiResponse;
-import com.groupy.dto.FeedsResponse;
+import com.groupy.dto.PaginationResponse;
 import com.groupy.dto.PostResponseDto;
 import com.groupy.service.PostService;
 
 import java.security.Principal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -39,20 +38,34 @@ public class PostController {
     }
 
     @GetMapping("/feed/following")
-    public ResponseEntity<ApiResponse<List<FeedsResponse>>> getFeed(Principal principal) {
-        List<FeedsResponse> feed = postService.getFeed(principal.getName());
-        return ResponseEntity.ok(ApiResponse.success("Feed retrieved successfully", feed));
+    public ResponseEntity<ApiResponse<PaginationResponse>> getFeed(
+		@RequestParam Boolean onlyLiked,
+		@RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int limit,
+		Principal principal
+	) {
+    	PaginationResponse res = postService.getFeed(principal.getName(), onlyLiked, page, limit);
+        return ResponseEntity.ok(ApiResponse.success("Feed retrieved successfully", res));
     }
 
     @GetMapping("/feeds/{userId}")
-    public ResponseEntity<ApiResponse<List<PostResponseDto>>> getFeedsByUsername(@PathVariable Long userId, Principal principal) {
-        List<PostResponseDto> feed = postService.getPostsByUser(userId, principal.getName());
+    public ResponseEntity<ApiResponse<PaginationResponse>> getFeedsByUsername(
+		@PathVariable Long userId, 
+		@RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int limit,
+        Principal principal
+    ) {
+    	PaginationResponse feed = postService.getPostsByUser(userId, principal.getName(), page, limit);
         return ResponseEntity.ok(ApiResponse.success("Feed retrieved successfully", feed));
     }
     
     @GetMapping("/feeds/liked")
-    public ResponseEntity<ApiResponse<List<PostResponseDto>>> getLikedFeedsByUsername(Principal principal) {
-        List<PostResponseDto> feed = postService.getLikedPostsByUser(principal.getName());
+    public ResponseEntity<ApiResponse<PaginationResponse>> getLikedFeedsByUsername(
+		@RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int limit,
+		Principal principal
+	) {
+    	PaginationResponse feed = postService.getLikedPostsByUser(principal.getName(), page, limit);
         return ResponseEntity.ok(ApiResponse.success("Feed retrieved successfully", feed));
     }
 

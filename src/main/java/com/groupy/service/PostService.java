@@ -1,22 +1,20 @@
 package com.groupy.service;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
 import com.groupy.dto.FeedsResponse;
+import com.groupy.dto.PaginationResponse;
 import com.groupy.dto.PostResponseDto;
 import com.groupy.entity.Post;
 import com.groupy.entity.PostLike;
@@ -100,15 +98,39 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public List<FeedsResponse> getFeed(String username) {
+    public PaginationResponse getFeed(String username, Boolean onlyLiked, int page, int limit) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Post> posts = postRepository.findFeedByUser(user);
+        if (onlyLiked == null) {
+            onlyLiked = false;
+        }
+        
+        Pageable pageable = PageRequest.of(
+        		page,
+                limit,
+                Sort.by(
+            	    Sort.Order.desc("createdAt"),
+            	    Sort.Order.desc("id")
+            	)
+        );
 
-        return posts.stream()
-                .map(post -> mapToFeedResponse(post, user))
-                .collect(Collectors.toList());
+        Slice<Post> posts = postRepository.findFeedByUserOptimized(user, onlyLiked, pageable);
+
+        List<FeedsResponse> content =
+        		posts.getContent()
+                        .stream()
+                        .map(post -> mapToFeedResponse(post, user))
+                        .toList();
+
+        boolean hasMore = posts.hasNext();
+
+        return new PaginationResponse(
+                content,
+                page,
+                limit,
+                hasMore
+        );
     }
     
     private FeedsResponse mapToFeedResponse(Post post, User currentUser) {
@@ -143,7 +165,7 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public List<PostResponseDto> getPostsByUser(Long userId, String currentUsername) {
+    public PaginationResponse getPostsByUser(Long userId, String currentUsername, int page, int limit) {
 
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -151,24 +173,75 @@ public class PostService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Post> posts = postRepository.findPostsWithImageOnlyByUser(user.getId());
+//        List<Post> posts = postRepository.findPostsWithImageOnlyByUser(user.getId());
         // System.out.println("posts: " + posts);
-        return posts.stream()
-            .map(post -> mapToDto(post, currentUser))
-            .collect(Collectors.toList());
+//        return posts.stream()
+//            .map(post -> mapToDto(post, currentUser))
+//            .collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(
+        		page,
+                limit,
+                Sort.by(
+            	    Sort.Order.desc("createdAt"),
+            	    Sort.Order.desc("id")
+            	)
+        );
+
+        Slice<Post> posts = postRepository.findPostsWithImageOnlyByUser(userId, pageable);
+
+        List<FeedsResponse> content =
+        		posts.getContent()
+                        .stream()
+                        .map(post -> mapToFeedResponse(post, user))
+                        .toList();
+
+        boolean hasMore = posts.hasNext();
+
+        return new PaginationResponse(
+                content,
+                page,
+                limit,
+                hasMore
+        );
     }
     
     @Transactional(readOnly = true)
-    public List<PostResponseDto> getLikedPostsByUser(String currentUsername) {
+    public PaginationResponse getLikedPostsByUser(String currentUsername, int page, int limit) {
 
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Post> posts = postRepository.findLikedPostsWithImageOnlyByOtherUsers(currentUser.getId());
+//        List<Post> posts = postRepository.findLikedPostsWithImageOnlyByOtherUsers(currentUser.getId());
         // System.out.println("posts: " + posts);
-        return posts.stream()
-            .map(post -> mapToDto(post, currentUser))
-            .collect(Collectors.toList());
+//        return posts.stream()
+//            .map(post -> mapToDto(post, currentUser))
+//            .collect(Collectors.toList());
+        
+        Pageable pageable = PageRequest.of(
+        		page,
+                limit,
+                Sort.by(
+            	    Sort.Order.desc("createdAt"),
+            	    Sort.Order.desc("id")
+            	)
+        );
+
+        Slice<Post> posts = postRepository.findLikedPostsWithImageOnlyByOtherUsers(currentUser.getId(), pageable);
+        
+        List<FeedsResponse> content =
+        		posts.getContent()
+                        .stream()
+                        .map(post -> mapToFeedResponse(post, currentUser))
+                        .toList();
+
+        boolean hasMore = posts.hasNext();
+        
+        return new PaginationResponse(
+                content,
+                page,
+                limit,
+                hasMore
+        );
     }
 
     @Transactional
