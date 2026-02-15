@@ -35,7 +35,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 		    SELECT DISTINCT p FROM Post p
 		    LEFT JOIN Follow f ON f.following = p.user
 		    LEFT JOIN p.likes l
-		    WHERE S
+		    WHERE 
 		        (p.user = :user OR f.follower = :user)
 		        AND (
 		            :onlyLiked = false 
