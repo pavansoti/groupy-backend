@@ -7,6 +7,6 @@ import lombok.Data;
 @Data
 public class TypingResponse {
     private String conversationId;
-    private String username;
-    private boolean isTyping;
+    private String userName;
+    private boolean typing;
 }

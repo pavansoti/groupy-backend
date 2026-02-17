@@ -2,13 +2,18 @@ package com.groupy.controller;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
 import com.groupy.dto.ChatRequest;
+import com.groupy.dto.ConversationHistoryResponse;
+import com.groupy.dto.JoinEventResponse;
 import com.groupy.dto.MessageResponse;
+import com.groupy.dto.ReadReceiptResponse;
 import com.groupy.dto.TypingRequest;
 import com.groupy.dto.TypingResponse;
 import com.groupy.entity.Conversation;
@@ -17,6 +22,7 @@ import com.groupy.entity.User;
 import com.groupy.repository.ConversationRepository;
 import com.groupy.repository.MessageRepository;
 import com.groupy.repository.UserRepository;
+import com.groupy.security.CustomUserDetails;
 
 import lombok.RequiredArgsConstructor;
 
@@ -41,10 +47,20 @@ public class ChatWebSocketController {
                 conversationRepository.findById(request.getConversationId())
                         .orElseThrow();
 
+        String preview;
+
+        if (request.getType().equals("IMAGE")) {
+            preview = "📷 Photo";
+        } else if (request.getType().equals("VIDEO")) {
+            preview = "🎥 Video";
+        } else {
+            preview = request.getContent();
+        }
+        
         Message message = Message.builder()
                 .conversation(conversation)
                 .sender(sender)
-                .content(request.getContent())
+                .content(preview)
                 .type(request.getType())
                 .build();
 
@@ -78,24 +94,72 @@ public class ChatWebSocketController {
     public void joinConversation(ChatRequest request,
                                  Principal principal) {
 
-        String username = principal.getName();
+    	User user = userRepository
+                .findByUsername(principal.getName())
+                .orElseThrow();
 
-        messagingTemplate.convertAndSend(
-                "/topic/conversation/" + request.getConversationId(),
-                username + " joined the conversation"
+        Conversation conversation =
+                conversationRepository.findById(request.getConversationId())
+                        .orElseThrow();
+
+        // Fetch messages
+        List<Message> messages =
+                messageRepository.findByConversationIdOrderByCreatedAtAsc(
+                        conversation.getId()
+                );
+
+        // Convert to MessageResponse
+        List<MessageResponse> messageResponses = messages.stream()
+                .map(message -> MessageResponse.builder()
+                        .id(message.getId().toString())
+                        .conversationId(conversation.getId().toString())
+                        .senderId(message.getSender().getId().toString())
+                        .senderUsername(message.getSender().getUsername())
+                        .senderProfilePicture(message.getSender().getImageUrl())
+                        .content(message.getContent())
+                        .type(message.getType())
+                        .createdAt(message.getCreatedAt().toString())
+                        .isRead(message.isRead())
+                        .build()
+                ).toList();
+
+        ConversationHistoryResponse historyResponse =
+                new ConversationHistoryResponse(
+                        conversation.getId().toString(),
+                        messageResponses,
+                        "HISTORY"
+                );
+
+        // Send ONLY to that user
+        messagingTemplate.convertAndSendToUser(
+                user.getUsername(),
+                "/queue/conversation-history",
+                historyResponse
         );
+
+        // Optional: notify others that user joined
+        JoinEventResponse joinEvent = new JoinEventResponse(
+                conversation.getId(),
+                user.getUsername(),
+                "JOIN"
+        );
+
+//        messagingTemplate.convertAndSend(
+//                "/topic/conversation/" + conversation.getId(),
+//                joinEvent
+//        );
     }
     
     @MessageMapping("/chat.typing")
     public void typing(TypingRequest request,
                        Principal principal) {
-
+    	
         String username = principal.getName();
 
         TypingResponse response = TypingResponse.builder()
                 .conversationId(request.getConversationId().toString())
-                .username(username)
-                .isTyping(request.isTyping())
+                .userName(username)
+                .typing(request.isTyping())
                 .build();
 
         messagingTemplate.convertAndSend(
@@ -117,12 +181,17 @@ public class ChatWebSocketController {
                 user.getId()
         );
 
+        ReadReceiptResponse response = new ReadReceiptResponse(
+                request.getConversationId(),
+                user.getId(),
+                user.getUsername(),
+                "READ"
+        );
+
         messagingTemplate.convertAndSend(
                 "/topic/conversation/" + request.getConversationId() + "/read",
-                user.getUsername() + " read messages"
+                response
         );
     }
-
-
 
 }
