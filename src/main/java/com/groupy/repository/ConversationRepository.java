@@ -29,4 +29,15 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
         ORDER BY c.lastMessageTime DESC
     """)
     List<Conversation> findByUserId(@Param("userId") Long userId);
+    
+    @Query("""
+	    SELECT DISTINCT other.username
+	    FROM Conversation c
+	    JOIN c.participants me
+	    JOIN c.participants other
+	    WHERE me.id = :userId
+	      AND other.id <> :userId
+	""")
+	List<String> findParticipantUsernames(@Param("userId") Long userId);
+
 }

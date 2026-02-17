@@ -3,10 +3,10 @@ package com.groupy.controller;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
 import com.groupy.dto.ChatRequest;
@@ -16,13 +16,14 @@ import com.groupy.dto.MessageResponse;
 import com.groupy.dto.ReadReceiptResponse;
 import com.groupy.dto.TypingRequest;
 import com.groupy.dto.TypingResponse;
+import com.groupy.dto.UserStatusResponse;
 import com.groupy.entity.Conversation;
 import com.groupy.entity.Message;
 import com.groupy.entity.User;
 import com.groupy.repository.ConversationRepository;
 import com.groupy.repository.MessageRepository;
 import com.groupy.repository.UserRepository;
-import com.groupy.security.CustomUserDetails;
+import com.groupy.service.PresenceService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +35,7 @@ public class ChatWebSocketController {
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final PresenceService presenceService;
 
     @MessageMapping("/chat.send")
     public void sendMessage(ChatRequest request,
@@ -192,6 +194,50 @@ public class ChatWebSocketController {
                 "/topic/conversation/" + request.getConversationId() + "/read",
                 response
         );
+    }
+    
+    @MessageMapping("/presence.sync")
+    public void syncPresence(Principal principal) {
+
+    	try {
+
+            if (principal == null) {
+                return;
+            }
+
+            String username = principal.getName();
+
+            Optional<User> optionalUser =
+                    userRepository.findByUsername(username);
+
+            if (optionalUser.isEmpty()) {
+                return;
+            }
+
+            User currentUser = optionalUser.get();
+
+            List<String> participantsUsername =
+                    conversationRepository
+                            .findParticipantUsernames(currentUser.getId());
+
+            for (String userName : participantsUsername) {
+
+                boolean online =
+                        presenceService.isOnline(userName);
+
+                messagingTemplate.convertAndSendToUser(
+                        username,
+                        "/queue/presence-sync",
+                        new UserStatusResponse(
+                        		userName,
+                                online
+                        )
+                );
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace(); // IMPORTANT for debugging
+        }
     }
 
 }
