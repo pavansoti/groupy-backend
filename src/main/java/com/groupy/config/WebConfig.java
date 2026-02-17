@@ -13,7 +13,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
             		"http://localhost:3000", 
             		"http://localhost:4200", 
-            		"https://v0-groupy-web.vercel.app"
+            		"https://v0-groupy-web.vercel.app",
+            		"https://vm-lwkp6jia9h3tixti3inj2n.vusercontent.net"
         		)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
                 .allowedHeaders("*")

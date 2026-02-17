@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.groupy.entity.Message;
 
+import jakarta.transaction.Transactional;
+
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
     List<Message> findByConversationIdOrderByCreatedAtAsc(Long conversationId);
@@ -17,6 +19,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             Long userId
     );
     
+    @Transactional
     @Modifying
     @Query("""
            UPDATE Message m
