@@ -1,16 +1,21 @@
 package com.groupy.websocket;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.security.Principal;
+import java.util.List;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
+import org.springframework.web.socket.messaging.AbstractSubProtocolEvent;
+import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import com.groupy.dto.UserStatusResponse;
+import com.groupy.entity.User;
+import com.groupy.repository.ConversationRepository;
+import com.groupy.repository.UserRepository;
+import com.groupy.service.PresenceService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,48 +23,58 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WebSocketEventListener {
 
+    private final PresenceService presenceService;
     private final SimpMessagingTemplate messagingTemplate;
-
-    // supports multiple tabs
-    private static final Map<String, Integer> onlineUsers = new ConcurrentHashMap<>();
+    private final UserRepository userRepository;
+    private final ConversationRepository conversationRepository;
 
     @EventListener
-    public void handleWebSocketConnect(SessionConnectedEvent event) {
-
-        StompHeaderAccessor accessor =
-                StompHeaderAccessor.wrap(event.getMessage());
-
-        if (accessor.getUser() == null) return;
-
-        String username = accessor.getUser().getName();
-
-        onlineUsers.merge(username, 1, Integer::sum);
-
-        messagingTemplate.convertAndSend(
-                "/topic/user-status",
-                new UserStatusResponse(username, true)
-        );
+    public void handleConnect(SessionConnectEvent event) {
+        sendPresence(event, true);
     }
 
     @EventListener
-    public void handleWebSocketDisconnect(SessionDisconnectEvent event) {
+    public void handleDisconnect(SessionDisconnectEvent event) {
+        sendPresence(event, false);
+    }
 
-        StompHeaderAccessor accessor =
-                StompHeaderAccessor.wrap(event.getMessage());
+    private void sendPresence(AbstractSubProtocolEvent event, boolean online) {
 
-        if (accessor.getUser() == null) return;
+        try {
+            StompHeaderAccessor accessor =
+                    StompHeaderAccessor.wrap(event.getMessage());
 
-        String username = accessor.getUser().getName();
+            Principal principal = accessor.getUser();
 
-        onlineUsers.computeIfPresent(username, (key, count) -> {
-            if (count <= 1) {
-                messagingTemplate.convertAndSend(
-                        "/topic/user-status",
-                        new UserStatusResponse(username, false)
+            if (principal == null) return;
+
+            String username = principal.getName();
+
+            User user = userRepository.findByUsername(username)
+                    .orElse(null);
+
+            if (user == null) return;
+
+            List<String> participants =
+                    conversationRepository
+                            .findParticipantUsernames(user.getId());
+
+            UserStatusResponse payload =
+                    new UserStatusResponse(username, online);
+
+            for (String participant : participants) {
+
+                messagingTemplate.convertAndSendToUser(
+                        participant,
+                        "/queue/presence",
+                        payload
                 );
-                return null;
             }
-            return count - 1;
-        });
+
+//            log.info("Presence updated: {} -> {}", username, online);
+
+        } catch (Exception e) {
+//            log.error("Presence sync error", e);
+        }
     }
 }
