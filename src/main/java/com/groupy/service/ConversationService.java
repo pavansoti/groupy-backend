@@ -20,6 +20,7 @@ public class ConversationService {
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
     private final MessageRepository messageRepository;
+    private final PresenceService presenceService;
 
     public ConversationResponse createOrGet(Long currentUserId, Long targetUserId) {
 
@@ -73,7 +74,7 @@ public class ConversationService {
                                 : null
                 )
                 .unreadCount(unreadCount)
-                .isOnline(false)
+                .isOnline(presenceService.isOnline(participant.getUsername()))
                 .build();
     }
 
