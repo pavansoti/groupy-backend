@@ -54,6 +54,12 @@ public class WebSocketEventListener {
                     .orElse(null);
 
             if (user == null) return;
+            
+            if (online) {
+                presenceService.userConnected(username);
+            } else {
+                presenceService.userDisconnected(username);
+            }
 
             List<String> participants =
                     conversationRepository

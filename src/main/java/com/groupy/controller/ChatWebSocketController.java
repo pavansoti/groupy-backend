@@ -84,8 +84,6 @@ public class ChatWebSocketController {
                 .isRead(false)
                 .build();
         
-        System.out.println(response);
-
         messagingTemplate.convertAndSend(
                 "/topic/conversation/" + conversation.getId(),
                 response
