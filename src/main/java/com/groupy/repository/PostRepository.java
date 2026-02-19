@@ -33,14 +33,18 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 	
 	@Query("""
 		    SELECT DISTINCT p FROM Post p
-		    LEFT JOIN Follow f ON f.following = p.user
-		    LEFT JOIN p.likes l
-		    WHERE 
-		        (p.user = :user OR f.follower = :user)
-		        AND (
-		            :onlyLiked = false 
-		            OR (l.user = :user AND p.user <> :user)
-		        )
+			LEFT JOIN Follow f ON f.following = p.user
+			LEFT JOIN p.likes l
+			WHERE 
+			    (
+			        p.user = :user 
+			        OR f.follower = :user 
+			        OR COALESCE(p.user.privateAccount, false) = false
+			    )
+			    AND (
+			        :onlyLiked = false 
+			        OR (l.user = :user AND p.user <> :user)
+			    )
 		""")
 	Slice<Post> findFeedByUserOptimized(
 	        @Param("user") User user,
