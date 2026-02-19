@@ -1,6 +1,7 @@
 package com.groupy.service;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -41,5 +42,15 @@ public class CloudinaryService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete image", e);
         }
+    }
+    
+    public Map uploadFile(MultipartFile file) throws IOException {
+
+        Map<String, Object> options = new HashMap<>();
+
+        // Auto detect resource type (important for video/audio)
+        options.put("resource_type", "auto");
+
+        return cloudinary.uploader().upload(file.getBytes(), options);
     }
 }

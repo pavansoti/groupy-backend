@@ -48,21 +48,11 @@ public class ChatWebSocketController {
         Conversation conversation =
                 conversationRepository.findById(request.getConversationId())
                         .orElseThrow();
-
-        String preview;
-
-        if (request.getType().equals("IMAGE")) {
-            preview = "📷 Photo";
-        } else if (request.getType().equals("VIDEO")) {
-            preview = "🎥 Video";
-        } else {
-            preview = request.getContent();
-        }
         
         Message message = Message.builder()
                 .conversation(conversation)
                 .sender(sender)
-                .content(preview)
+                .content(request.getContent())
                 .type(request.getType())
                 .build();
 
