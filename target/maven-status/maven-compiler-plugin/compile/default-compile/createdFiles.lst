@@ -1,6 +1,7 @@
 com\groupy\entity\Follow$FollowBuilder.class
 com\groupy\util\JwtUtil.class
 com\groupy\security\CustomUserDetailsService.class
+com\groupy\service\PresenceService.class
 com\groupy\dto\ChatRequest.class
 com\groupy\dto\PaginationResponse.class
 com\groupy\entity\Follow.class
@@ -15,6 +16,7 @@ com\groupy\dto\NotificationDto$NotificationDtoBuilder.class
 com\groupy\service\PostService.class
 com\groupy\service\EmailService.class
 com\groupy\dto\LoginRequest.class
+com\groupy\dto\UserStatusResponse.class
 com\groupy\dto\ApiResponse.class
 com\groupy\dto\ChangePasswordRequest.class
 com\groupy\dto\UserSearchDto.class
@@ -32,6 +34,7 @@ com\groupy\dto\UserRequestDto.class
 com\groupy\security\CustomUserDetails.class
 com\groupy\entity\Post.class
 com\groupy\exception\GlobalExceptionHandler.class
+com\groupy\websocket\WebSocketEventListener.class
 com\groupy\controller\ConversationController.class
 com\groupy\entity\PostLike$PostLikeBuilder.class
 com\groupy\dto\ConversationHistoryResponse.class

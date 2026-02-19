@@ -1,2 +1,50 @@
-target/
-*.class
+############################
+# Build
+############################
+/target/
+/build/
+.gradle/
+
+############################
+# Logs
+############################
+*.log
+
+############################
+# IDE
+############################
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+############################
+# OS
+############################
+.DS_Store
+Thumbs.db
+
+############################
+# Secrets
+############################
+.env
+.env.*
+application-local.properties
+application-local.yml
+application-dev.properties
+application-dev.yml
+
+############################
+# Node (if frontend exists)
+############################
+node_modules/
+.next/
+dist/
+
+############################
+# Generated
+############################
+*.jar
+*.war
