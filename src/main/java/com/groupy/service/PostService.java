@@ -16,9 +16,11 @@ import org.springframework.web.multipart.MultipartFile;
 import com.groupy.dto.FeedsResponse;
 import com.groupy.dto.PaginationResponse;
 import com.groupy.dto.PostResponseDto;
+import com.groupy.dto.UserResponseDto;
 import com.groupy.entity.Post;
 import com.groupy.entity.PostLike;
 import com.groupy.entity.User;
+import com.groupy.repository.FollowRepository;
 import com.groupy.repository.PostLikeRepository;
 import com.groupy.repository.PostRepository;
 import com.groupy.repository.UserRepository;
@@ -34,6 +36,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final CloudinaryService cloudinaryService;
+    private final FollowRepository followRepository;
 
     // Directory for local file storage
 //    private final Path fileStorageLocation = Paths.get("uploads").toAbsolutePath().normalize();
@@ -71,6 +74,49 @@ public class PostService {
         Post savedPost = postRepository.save(post);
 
         return mapToDto(savedPost, user);
+    }
+    
+    public PostResponseDto getPostById(Long postId) {
+
+        // Get post
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+//        User postOwner = post.getUser();
+
+        // 3️⃣ Privacy Check
+//        boolean isOwner = postOwner.getId().equals(currentUser.getId());
+//        boolean isPublic = !Boolean.TRUE.equals(postOwner.getPrivateAccount());
+
+//        if (!isOwner && !isPublic) {
+//
+//            // Check if current user follows post owner
+//            boolean isFollowing = followRepository
+//                    .existsByFollowerAndFollowing(currentUser, postOwner);
+//
+//            if (!isFollowing) {
+//                throw new RuntimeException("This account is private");
+//            }
+//        }
+
+        long likeCount = post.getLikes() != null ? post.getLikes().size() : 0;
+        
+        User user = post.getUser();
+        UserResponseDto userDto = new UserResponseDto();
+        
+        userDto.setId(user.getId());
+        userDto.setUsername(user.getUsername());
+        userDto.setImageUrl(user.getImageUrl());
+        
+        return PostResponseDto.builder()
+                .id(post.getId())
+                .caption(post.getCaption())
+                .imageUrl(post.getImageUrl())
+                .createdAt(post.getCreatedAt())
+                .user(userDto)
+                .likeCount(likeCount)
+//                .isLikedByCurrentUser(isLiked)
+                .build();
     }
 
     public void deletePost(Long postId, String username) {
