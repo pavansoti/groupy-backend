@@ -18,11 +18,13 @@ import com.groupy.dto.ApiResponse;
 import com.groupy.dto.ChangePasswordRequest;
 import com.groupy.dto.JwtResponse;
 import com.groupy.dto.LoginRequest;
+import com.groupy.dto.PostResponseDto;
 import com.groupy.dto.ResetPasswordRequest;
 import com.groupy.dto.SignupRequest;
 import com.groupy.entity.User;
 import com.groupy.exception.ResourceNotFoundException;
 import com.groupy.repository.UserRepository;
+import com.groupy.service.PostService;
 import com.groupy.service.UserService;
 import com.groupy.util.JwtUtil;
 
@@ -36,7 +38,8 @@ public class AuthController {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
-
+    private final PostService postService;
+    
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<JwtResponse>> registerUser(@Valid @RequestBody SignupRequest signupRequest) {
         // Check if username or email already exists
@@ -149,5 +152,16 @@ public class AuthController {
         return ResponseEntity.ok(
                 ApiResponse.success("Password reset successfully", null)
         );
+    }
+    
+    // open api
+    @GetMapping("/{postId}")
+    public ResponseEntity<ApiResponse<PostResponseDto>> createPost(
+        @PathVariable Long postId
+    ) {
+
+        PostResponseDto post = postService.getPostById(postId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success("Post retrived successfully", post));
     }
 }

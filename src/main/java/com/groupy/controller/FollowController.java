@@ -1,19 +1,26 @@
 package com.groupy.controller;
 
-import lombok.RequiredArgsConstructor;
+import java.security.Principal;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.groupy.dto.ApiResponse;
 import com.groupy.dto.FollowCountDto;
+import com.groupy.dto.PaginationResponse;
 import com.groupy.dto.UserDto;
 import com.groupy.entity.Follow;
 import com.groupy.entity.User;
 import com.groupy.service.FollowService;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/users")
@@ -36,23 +43,31 @@ public class FollowController {
     }
 
     @GetMapping("/{id}/followers")
-    public ResponseEntity<ApiResponse<List<UserDto>>> getFollowers(@PathVariable Long id) {
-        List<User> followers = followService.getFollowers(id);
-        List<UserDto> followerDtos = followers.stream()
-                .map(this::convertToUserDto)
-                .collect(Collectors.toList());
-        
-        return ResponseEntity.ok(ApiResponse.success("Followers retrieved successfully", followerDtos));
+    public ResponseEntity<ApiResponse<PaginationResponse>> getFollowers(
+    		Principal principal,
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        PaginationResponse response = followService.getFollowers(principal.getName(), id, page, limit);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Followers retrieved successfully", response)
+        );
     }
 
     @GetMapping("/{id}/following")
-    public ResponseEntity<ApiResponse<List<UserDto>>> getFollowing(@PathVariable Long id) {
-        List<User> following = followService.getFollowing(id);
-        List<UserDto> followingDtos = following.stream()
-                .map(this::convertToUserDto)
-                .collect(Collectors.toList());
-        
-        return ResponseEntity.ok(ApiResponse.success("Following users retrieved successfully", followingDtos));
+    public ResponseEntity<ApiResponse<PaginationResponse>> getFollowing(
+    		Principal principal,
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        PaginationResponse response = followService.getFollowing(principal.getName(), id, page, limit);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Following users retrieved successfully", response)
+        );
     }
 
     @GetMapping("/{id}/follow-stats")
@@ -66,13 +81,4 @@ public class FollowController {
         return ResponseEntity.ok(ApiResponse.success("Follow statistics retrieved successfully", followCountDto));
     }
 
-    private UserDto convertToUserDto(User user) {
-        UserDto dto = new UserDto();
-        dto.setId(user.getId());
-        dto.setUsername(user.getUsername());
-        dto.setEmail(user.getEmail());
-        dto.setBio(user.getBio());
-        dto.setCreatedAt(user.getCreatedAt().toString());
-        return dto;
-    }
 }

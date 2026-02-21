@@ -1,19 +1,28 @@
 package com.groupy.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+
+import org.hibernate.query.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.groupy.dto.PaginationResponse;
+import com.groupy.dto.UserDto;
+import com.groupy.dto.UserSearchDto;
 import com.groupy.entity.Follow;
 import com.groupy.entity.User;
 import com.groupy.exception.ResourceNotFoundException;
 import com.groupy.repository.FollowRepository;
 import com.groupy.repository.UserRepository;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -72,19 +81,71 @@ public class FollowService {
     }
 
     @Transactional(readOnly = true)
-    public List<User> getFollowers(Long userId) {
+    public PaginationResponse getFollowers(String username, Long userId, int page, int limit) {
+    	
+    	User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        return followRepository.findFollowersByUserId(userId);
+        Pageable pageable = PageRequest.of(
+    		page, 
+    		limit
+        );
+
+        Slice<User> followersPage = followRepository.findFollowersByUserId(userId, pageable);
+
+        List<UserSearchDto> followerDtos = followersPage.getContent()
+                .stream()
+                .map(f -> this.convertToUserDto(f, user.getId()))
+                .toList();
+
+        boolean hasMore = followersPage.hasNext();
+
+        return new PaginationResponse(
+                followerDtos,
+                page,
+                limit,
+                hasMore
+        );
     }
-
+    
     @Transactional(readOnly = true)
-    public List<User> getFollowing(Long userId) {
+    public PaginationResponse getFollowing(String username, Long userId, int page, int limit) {
+    	
+    	User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        return followRepository.findFollowingByUserId(userId);
+        Pageable pageable = PageRequest.of(
+    		page, 
+    		limit
+        );
+        
+        List<User> testFollowing = followRepository.testFollowing(userId);
+        
+        System.out.println(testFollowing.size());
+
+        Slice<User> followingPage = followRepository.findFollowingByUserId(userId, pageable);
+        
+        System.out.println(followingPage.getContent().size());
+
+        List<UserSearchDto> followingDtos = followingPage.getContent()
+                .stream()
+                .map(f -> this.convertToUserDto(f, user.getId()))
+                .toList();
+
+        boolean hasMore = followingPage.hasNext();
+
+        return new PaginationResponse(
+                followingDtos,
+                page,
+                limit,
+                hasMore
+        );
     }
 
     @Transactional(readOnly = true)
@@ -117,5 +178,23 @@ public class FollowService {
         String username = authentication.getName();
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found"));
+    }
+    
+
+    private UserSearchDto convertToUserDto(User user, Long currentUserId) {
+
+    	boolean isFollowing = user.getFollowers() != null ? user.getFollowers().
+                stream().
+                anyMatch(follow -> follow.getFollower().getId().equals(currentUserId)) : false;
+
+    	return new UserSearchDto(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getBio(),
+                user.getImageUrl(),
+                user.getFollowers() != null ? user.getFollowers().size() : 0,
+                isFollowing
+        );
     }
 }

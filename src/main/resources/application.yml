@@ -41,7 +41,7 @@ app:
  frontend-url: http://localhost:3000
  mail:
   from: pavansoti@gmail.com
-  sendgrid-api-key: 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
+  sendgrid-api-key: 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
 
 cloudinary:
   cloud-name: dax0rgeys

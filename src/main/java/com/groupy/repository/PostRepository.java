@@ -10,6 +10,7 @@ import com.groupy.entity.Post;
 import com.groupy.entity.User;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
@@ -73,4 +74,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
    	Slice<Post> findLikedPostsWithImageOnlyByOtherUsers(@Param("userId") Long userId, Pageable pageable);
 
     List<Post> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+	Optional<User> findById(Integer postId);
 }
