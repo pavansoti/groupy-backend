@@ -3,12 +3,13 @@ package com.groupy.service;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,6 +25,7 @@ import com.groupy.repository.FollowRepository;
 import com.groupy.repository.PostLikeRepository;
 import com.groupy.repository.PostRepository;
 import com.groupy.repository.UserRepository;
+import com.groupy.security.CustomUserDetails;
 
 import lombok.RequiredArgsConstructor;
 
@@ -98,6 +100,31 @@ public class PostService {
 //                throw new RuntimeException("This account is private");
 //            }
 //        }
+        
+        boolean isLiked = false;
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null &&
+            authentication.isAuthenticated() &&
+            !authentication.getPrincipal().equals("anonymousUser")) {
+
+            CustomUserDetails userDetails =
+                    (CustomUserDetails) authentication.getPrincipal();
+
+            Long currentUserId = userDetails.getId();
+            
+            List<PostLike> likes = post.getLikes() != null
+                    ? post.getLikes()
+                    : Collections.emptyList();
+
+            isLiked = likes.stream()
+                    .anyMatch(like ->
+                            like.getUser() != null &&
+                            like.getUser().getId().equals(currentUserId)
+                    );
+        }
 
         long likeCount = post.getLikes() != null ? post.getLikes().size() : 0;
         
@@ -115,7 +142,7 @@ public class PostService {
                 .createdAt(post.getCreatedAt())
                 .user(userDto)
                 .likeCount(likeCount)
-//                .isLikedByCurrentUser(isLiked)
+                .isLikedByCurrentUser(isLiked)
                 .build();
     }
 
