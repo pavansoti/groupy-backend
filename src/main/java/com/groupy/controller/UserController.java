@@ -88,6 +88,15 @@ public class UserController {
         );
     }
 
+    @DeleteMapping(value = "/{id}/profile-pic")
+    public ResponseEntity<ApiResponse<User>> deleteProfilePic(@PathVariable Long id) {
+
+        User user = userService.deleteProfilePic(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Profile picture updated successfully", user)
+        );
+    }
     
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
