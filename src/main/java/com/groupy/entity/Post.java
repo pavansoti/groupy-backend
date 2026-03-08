@@ -53,6 +53,10 @@ public class Post {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+    
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<Comment> comments;
 
     // Establishing relationship for cascading deletes if needed,
     // or just for accessing likes count efficienty if we add @Formula or similar

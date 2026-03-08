@@ -107,7 +107,8 @@ public class FollowService {
                 followerDtos,
                 page,
                 limit,
-                hasMore
+                hasMore,
+                -1   // totalCount not available for Slice
         );
     }
     
@@ -131,8 +132,6 @@ public class FollowService {
 
         Slice<User> followingPage = followRepository.findFollowingByUserId(userId, pageable);
         
-        System.out.println(followingPage.getContent().size());
-
         List<UserSearchDto> followingDtos = followingPage.getContent()
                 .stream()
                 .map(f -> this.convertToUserDto(f, user.getId()))
@@ -144,7 +143,8 @@ public class FollowService {
                 followingDtos,
                 page,
                 limit,
-                hasMore
+                hasMore,
+                -1   // totalCount not available for Slice
         );
     }
 

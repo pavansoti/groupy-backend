@@ -13,4 +13,5 @@ public class PaginationResponse {
     private int page;
     private int size;
     private boolean hasMore;
+    private long totalCount;
 }

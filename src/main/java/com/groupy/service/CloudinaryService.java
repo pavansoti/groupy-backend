@@ -32,6 +32,34 @@ public class CloudinaryService {
             throw new RuntimeException("Image upload failed", e);
         }
     }
+    
+    public Map uploadMedia(MultipartFile file) {
+
+        try {
+
+            String contentType = file.getContentType();
+            String resourceType = "auto";
+
+            if (contentType != null) {
+                if (contentType.startsWith("image")) {
+                    resourceType = "image";
+                } else if (contentType.startsWith("video")) {
+                    resourceType = "video";
+                }
+            }
+
+            return cloudinary.uploader().upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap(
+                            "folder", "posts",
+                            "resource_type", resourceType
+                    )
+            );
+
+        } catch (IOException e) {
+            throw new RuntimeException("Media upload failed", e);
+        }
+    }
 
     public void deleteImage(String publicId) {
         try {
