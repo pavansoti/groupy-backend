@@ -18,6 +18,7 @@ import com.groupy.dto.FeedsResponse;
 import com.groupy.dto.PaginationResponse;
 import com.groupy.dto.PostResponseDto;
 import com.groupy.dto.UserResponseDto;
+import com.groupy.entity.Comment;
 import com.groupy.entity.Post;
 import com.groupy.entity.PostLike;
 import com.groupy.entity.User;
@@ -61,7 +62,7 @@ public class PostService {
         
         if (file != null && !file.isEmpty()) {
         	        	
-        	Map uploadResult = cloudinaryService.uploadImage(file);
+        	Map uploadResult = cloudinaryService.uploadMedia(file);
             imageUrl = uploadResult.get("secure_url").toString();
             publicId = uploadResult.get("public_id").toString();
         }
@@ -202,7 +203,8 @@ public class PostService {
                 content,
                 page,
                 limit,
-                hasMore
+                hasMore,
+                -1   // totalCount not available for Slice
         );
     }
     
@@ -213,6 +215,10 @@ public class PostService {
         List<PostLike> likes = post.getLikes() != null
                 ? post.getLikes()
                 : Collections.emptyList();
+        
+        List<Comment> comments = post.getComments() != null
+                ? post.getComments()
+        		: Collections.emptyList();
 
         boolean likedByCurrentUser = likes.stream()
                 .anyMatch(like ->
@@ -224,7 +230,7 @@ public class PostService {
         response.setImageUrl(post.getImageUrl());
         response.setCaption(post.getCaption());
         response.setLikeCount(likes.size());
-        response.setCommentCount(0); // better than null
+        response.setCommentCount(comments.size()); // better than null
         response.setCreatedAt(post.getCreatedAt().toString());
 
         User author = post.getUser();
@@ -274,7 +280,8 @@ public class PostService {
                 content,
                 page,
                 limit,
-                hasMore
+                hasMore,
+                -1   // totalCount not available for Slice
         );
     }
     
@@ -313,7 +320,8 @@ public class PostService {
                 content,
                 page,
                 limit,
-                hasMore
+                hasMore,
+                -1   // totalCount not available for Slice
         );
     }
 

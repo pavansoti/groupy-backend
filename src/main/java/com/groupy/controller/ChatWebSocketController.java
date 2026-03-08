@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
 import com.groupy.dto.ChatRequest;
@@ -23,6 +24,7 @@ import com.groupy.entity.User;
 import com.groupy.repository.ConversationRepository;
 import com.groupy.repository.MessageRepository;
 import com.groupy.repository.UserRepository;
+import com.groupy.security.CustomUserDetails;
 import com.groupy.service.PresenceService;
 
 import lombok.RequiredArgsConstructor;
@@ -84,9 +86,9 @@ public class ChatWebSocketController {
     public void joinConversation(ChatRequest request,
                                  Principal principal) {
 
-    	User user = userRepository
-                .findByUsername(principal.getName())
-                .orElseThrow();
+//    	User user = userRepository
+//                .findByUsername(principal.getName())
+//                .orElseThrow();
 
         Conversation conversation =
                 conversationRepository.findById(request.getConversationId())
@@ -122,7 +124,7 @@ public class ChatWebSocketController {
 
         // Send ONLY to that user
         messagingTemplate.convertAndSendToUser(
-                user.getUsername(),
+        		principal.getName(),
                 "/queue/conversation-history",
                 historyResponse
         );
@@ -130,7 +132,7 @@ public class ChatWebSocketController {
         // Optional: notify others that user joined
         JoinEventResponse joinEvent = new JoinEventResponse(
                 conversation.getId(),
-                user.getUsername(),
+                principal.getName(),
                 "JOIN"
         );
 
@@ -160,11 +162,12 @@ public class ChatWebSocketController {
     
     @MessageMapping("/chat.read")
     public void markAsRead(ChatRequest request,
-                           Principal principal) {
+    		@AuthenticationPrincipal CustomUserDetails user) {
 
-        User user = userRepository
-                .findByUsername(principal.getName())
-                .orElseThrow();
+//        User user = userRepository
+//                .findByUsername(principal.getName())
+//                .orElseThrow();
+        
 
         messageRepository.markMessagesAsRead(
                 request.getConversationId(),
